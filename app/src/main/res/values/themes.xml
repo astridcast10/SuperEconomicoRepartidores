@@ -1,7 +1,16 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Theme.SuperEconomicoRepartidor" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/green_primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">@color/green_dark</item>
+
+        <!-- Background and text colors as requested -->
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:textColor">@color/green_primary</item>
+        <item name="android:textColorPrimary">@color/green_primary</item>
     </style>
 </resources>

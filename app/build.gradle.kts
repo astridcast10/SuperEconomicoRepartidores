@@ -39,6 +39,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.constraintlayout)
     implementation(libs.core.splashscreen)
+    implementation(libs.swiperefreshlayout)
     
     // Retrofit
     implementation(libs.retrofit)
