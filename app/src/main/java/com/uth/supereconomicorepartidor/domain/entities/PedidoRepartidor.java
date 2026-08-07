@@ -1,6 +1,8 @@
 package com.uth.supereconomicorepartidor.domain.entities;
 
-public class PedidoRepartidor {
+import java.io.Serializable;
+
+public class PedidoRepartidor implements Serializable {
     private final Long id;
     private final String perfilId;
     private final Long direccionId;

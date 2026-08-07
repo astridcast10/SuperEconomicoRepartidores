@@ -34,6 +34,10 @@
             android:label="Mis Pedidos"
             android:theme="@style/Theme.SuperEconomicoRepartidor" />
 
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="YOUR_API_KEY_HERE" />
+
     </application>
 
 </manifest>

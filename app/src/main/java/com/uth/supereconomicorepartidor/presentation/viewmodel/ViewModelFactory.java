@@ -11,6 +11,8 @@ import com.uth.supereconomicorepartidor.data.repositories.AuthRepositoryImpl;
 import com.uth.supereconomicorepartidor.data.repositories.RepartidorRepositoryImpl;
 import com.uth.supereconomicorepartidor.domain.repositories.AuthRepository;
 import com.uth.supereconomicorepartidor.domain.repositories.RepartidorRepository;
+import com.uth.supereconomicorepartidor.domain.usecases.ActualizarEstadoPedidoUseCase;
+import com.uth.supereconomicorepartidor.domain.usecases.GetItemsPedidoUseCase;
 import com.uth.supereconomicorepartidor.domain.usecases.GetPedidosUseCase;
 import com.uth.supereconomicorepartidor.domain.usecases.LoginUseCase;
 
@@ -35,6 +37,12 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
             return (T) new LoginViewModel(new LoginUseCase(authRepository));
         } else if (modelClass.isAssignableFrom(PedidosViewModel.class)) {
             return (T) new PedidosViewModel(new GetPedidosUseCase(repartidorRepository));
+        } else if (modelClass.isAssignableFrom(DetallePedidoViewModel.class)) {
+            return (T) new DetallePedidoViewModel(
+                    repartidorRepository,
+                    new GetItemsPedidoUseCase(repartidorRepository),
+                    new ActualizarEstadoPedidoUseCase(repartidorRepository)
+            );
         }
         throw new IllegalArgumentException("Unknown ViewModel class: " + modelClass.getName());
     }

@@ -41,4 +41,16 @@ public interface RepartidorApi {
             @Query("id") String id,
             @Query("select") String select // usar "rol,nombre_completo"
     );
+
+    @GET("rest/v1/pedido_items")
+    Call<List<com.uth.supereconomicorepartidor.data.remote.models.ItemPedidoDTO>> getItemsPedido(
+            @Query("pedido_id") String pedidoId, // "eq.<id>"
+            @Query("select") String select
+    );
+
+    @PATCH("rest/v1/pedidos")
+    Call<Void> actualizarEstadoRepartidor(
+            @Query("id") String filtroId, // "eq.<id>"
+            @Body JsonObject cambios
+    );
 }
