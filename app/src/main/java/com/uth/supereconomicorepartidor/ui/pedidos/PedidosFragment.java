@@ -105,8 +105,9 @@ public class PedidosFragment extends Fragment {
             @Override public void onTabReselected(TabLayout.Tab tab) {}
         });
 
-        binding.btnProfile.setOnClickListener(v -> {
-            android.util.Log.d("Logout", "click detectado en btnProfile");
+        binding.cvProfile.setOnClickListener(v -> {
+            android.util.Log.d("Logout", "click detectado en cvProfile (dentro de Toolbar)");
+            android.widget.Toast.makeText(getContext(), "Abriendo cierre de sesión...", android.widget.Toast.LENGTH_SHORT).show();
             mostrarDialogoLogout();
         });
     }
