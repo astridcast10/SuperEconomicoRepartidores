@@ -6,6 +6,7 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
 import retrofit2.http.PATCH;
 import retrofit2.http.Query;
 
@@ -20,6 +21,7 @@ public interface RepartidorApi {
 
     @PATCH("rest/v1/pedidos")
     Call<Void> actualizarEstadoPedido(
+            @Header("Prefer") String prefer, // "return=minimal"
             @Query("id") String filtroId, // llega como "eq.<id>"
             @Body JsonObject cambios
     );
@@ -50,6 +52,7 @@ public interface RepartidorApi {
 
     @PATCH("rest/v1/pedidos")
     Call<Void> actualizarEstadoRepartidor(
+            @Header("Prefer") String prefer, // "return=minimal"
             @Query("id") String filtroId, // "eq.<id>"
             @Body JsonObject cambios
     );

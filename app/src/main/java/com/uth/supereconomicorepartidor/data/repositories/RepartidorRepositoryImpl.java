@@ -53,7 +53,7 @@ public class RepartidorRepositoryImpl implements RepartidorRepository {
         JsonObject cambios = new JsonObject();
         cambios.addProperty("estado", nuevoEstado);
 
-        repartidorApi.actualizarEstadoPedido("eq." + pedidoId, cambios).enqueue(new retrofit2.Callback<Void>() {
+        repartidorApi.actualizarEstadoPedido("return=minimal", "eq." + pedidoId, cambios).enqueue(new retrofit2.Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
@@ -77,7 +77,7 @@ public class RepartidorRepositoryImpl implements RepartidorRepository {
         cambios.addProperty("estado", nuevoEstado);
         cambios.addProperty("repartidor_id", repartidorId);
 
-        repartidorApi.actualizarEstadoRepartidor("eq." + pedidoId, cambios).enqueue(new retrofit2.Callback<Void>() {
+        repartidorApi.actualizarEstadoRepartidor("return=minimal", "eq." + pedidoId, cambios).enqueue(new retrofit2.Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {

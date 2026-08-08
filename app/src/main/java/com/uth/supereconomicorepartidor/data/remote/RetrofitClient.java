@@ -15,27 +15,25 @@ public class RetrofitClient {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor(message ->
                     android.util.Log.d("HTTP", message));
             logging.redactHeader("Authorization");
-            logging.redactHeader("apikey");
-            logging.setLevel(HttpLoggingInterceptor.Level.NONE);
+            logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
 
             Interceptor authInterceptor = chain -> {
                 Request original = chain.request();
+                
+                // Determinar qué token usar
+                String token = SupabaseConfig.ANON_KEY;
+                if (SesionSupabase.haySesionActiva()) {
+                    String userToken = SesionSupabase.obtenerTokenValido();
+                    if (userToken != null && !userToken.isEmpty()) {
+                        token = userToken;
+                    }
+                }
+
                 Request.Builder requestBuilder = original.newBuilder()
                         .header("apikey", SupabaseConfig.ANON_KEY)
+                        .header("Authorization", "Bearer " + token)
+                        .header("Content-Type", "application/json")
                         .method(original.method(), original.body());
-
-                if (original.header("Authorization") == null) {
-                    String token = SupabaseConfig.ANON_KEY;
-                    String url = original.url().toString();
-                    
-                    // Si estamos logueados y NO es una petición de auth/lookup inicial, usamos el token de sesión
-                    if (SesionSupabase.haySesionActiva() && !url.contains("/auth/v1/token") && !url.contains("perfiles?telefono=")) {
-                        token = SesionSupabase.obtenerTokenValido();
-                        if (token == null) token = SupabaseConfig.ANON_KEY;
-                    }
-                    
-                    requestBuilder.header("Authorization", "Bearer " + token);
-                }
 
                 return chain.proceed(requestBuilder.build());
             };

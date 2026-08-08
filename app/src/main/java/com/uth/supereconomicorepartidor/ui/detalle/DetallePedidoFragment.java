@@ -67,6 +67,7 @@ public class DetallePedidoFragment extends Fragment {
     private LocationCallback locationCallback;
 
     private PedidoRepartidor pedido;
+    private String currentStatus;
     private GeoPoint destinoGeoPoint;
     private Marker markerRepartidor;
     private Marker markerDestino;
@@ -116,6 +117,10 @@ public class DetallePedidoFragment extends Fragment {
 
         viewModel = new ViewModelProvider(this, new ViewModelFactory()).get(DetallePedidoViewModel.class);
 
+        if (pedido != null) {
+            currentStatus = pedido.getEstado();
+        }
+
         setupUI();
         setupRecyclerView();
         setupObservers();
@@ -137,13 +142,10 @@ public class DetallePedidoFragment extends Fragment {
             binding.tvClienteNombre.setText(pedido.getNombreCliente());
         }
 
-        String[] estados = {"pendiente", "preparando", "en_camino", "entregado"};
-        ArrayAdapter<String> adapterEstados = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, estados);
-        binding.autoCompleteEstado.setAdapter(adapterEstados);
-        binding.autoCompleteEstado.setText(pedido.getEstado(), false);
+        updateEstadoDropdown();
 
         binding.autoCompleteEstado.setOnItemClickListener((parent, view, position, id) -> {
-            String nuevoEstado = estados[position];
+            String nuevoEstado = (String) parent.getItemAtPosition(position);
             viewModel.actualizarEstado(pedido.getId(), nuevoEstado, SesionSupabase.obtenerIdUsuario());
             
             if ("en_camino".equalsIgnoreCase(nuevoEstado)) {
@@ -160,6 +162,29 @@ public class DetallePedidoFragment extends Fragment {
         
         binding.fabCentrar.setOnClickListener(v -> centrarMapa());
         binding.fabRuta.setOnClickListener(v -> generarRuta());
+    }
+
+    private void updateEstadoDropdown() {
+        String[] todosLosEstados = {"pendiente", "preparando", "en_camino", "entregado"};
+        List<String> opcionesFiltradas = new ArrayList<>();
+        
+        int indexActual = -1;
+        for (int i = 0; i < todosLosEstados.length; i++) {
+            if (todosLosEstados[i].equalsIgnoreCase(currentStatus)) {
+                indexActual = i;
+                break;
+            }
+        }
+
+        // Solo agregar el estado actual y los posteriores
+        for (int i = indexActual; i < todosLosEstados.length; i++) {
+            if (i >= 0) opcionesFiltradas.add(todosLosEstados[i]);
+        }
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), 
+                android.R.layout.simple_dropdown_item_1line, opcionesFiltradas);
+        binding.autoCompleteEstado.setAdapter(adapter);
+        binding.autoCompleteEstado.setText(currentStatus, false);
     }
 
     private void setupRecyclerView() {
@@ -209,11 +234,17 @@ public class DetallePedidoFragment extends Fragment {
         });
 
         viewModel.error.observe(getViewLifecycleOwner(), message -> {
-            if (message != null) Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_LONG).show();
+            if (message != null) {
+                Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_LONG).show();
+                // Si hubo error en la actualización, revertir el texto del estado
+                binding.autoCompleteEstado.setText(currentStatus, false);
+            }
         });
 
         viewModel.updateSuccess.observe(getViewLifecycleOwner(), success -> {
             if (success) {
+                currentStatus = binding.autoCompleteEstado.getText().toString();
+                updateEstadoDropdown(); // Regenerar la lista con el nuevo filtro
                 Snackbar.make(binding.getRoot(), "Estado actualizado correctamente", Snackbar.LENGTH_SHORT).show();
             }
         });
