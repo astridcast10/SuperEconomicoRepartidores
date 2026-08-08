@@ -2,7 +2,11 @@ package com.uth.supereconomicorepartidor.ui.detalle;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -54,6 +58,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class DetallePedidoFragment extends Fragment {
 
     private static final String ARG_PEDIDO = "pedido";
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
     private FragmentDetallePedidoBinding binding;
     private DetallePedidoViewModel viewModel;
@@ -127,6 +132,10 @@ public class DetallePedidoFragment extends Fragment {
         if (pedido == null) return;
         binding.tvIdPedido.setText(String.format(Locale.getDefault(), "#%d", pedido.getId()));
         binding.tvTotal.setText(String.format(Locale.getDefault(), "Total a Cobrar: $%.2f", pedido.getTotal()));
+        
+        if (pedido.getNombreCliente() != null && !pedido.getNombreCliente().isEmpty()) {
+            binding.tvClienteNombre.setText(pedido.getNombreCliente());
+        }
 
         String[] estados = {"pendiente", "preparando", "en_camino", "entregado"};
         ArrayAdapter<String> adapterEstados = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, estados);
@@ -150,6 +159,7 @@ public class DetallePedidoFragment extends Fragment {
         binding.toolbar.setNavigationOnClickListener(v -> requireActivity().onBackPressed());
         
         binding.fabCentrar.setOnClickListener(v -> centrarMapa());
+        binding.fabRuta.setOnClickListener(v -> generarRuta());
     }
 
     private void setupRecyclerView() {
@@ -163,6 +173,10 @@ public class DetallePedidoFragment extends Fragment {
         binding.map.setMultiTouchControls(true);
         binding.map.getZoomController().setVisibility(CustomZoomButtonsController.Visibility.NEVER);
         binding.map.getController().setZoom(17.0);
+        
+        // BUG 4 FIX - Centro inicial (evita el rectángulo celeste del océano)
+        // Se centrará en el destino en cuanto se cargue la dirección
+        binding.map.getController().setCenter(new GeoPoint(15.50417, -88.025));
 
         // BUG 3 - Evitar que el scroll del padre interfiera con el mapa
         binding.map.setOnTouchListener((v, event) -> {
@@ -205,49 +219,90 @@ public class DetallePedidoFragment extends Fragment {
         });
     }
 
+    private Drawable scaleDrawable(int resId, int width, int height) {
+        Drawable drawable = ContextCompat.getDrawable(requireContext(), resId);
+        if (drawable == null) return null;
+        
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, width, height);
+        drawable.draw(canvas);
+        
+        return new BitmapDrawable(getResources(), bitmap);
+    }
+
     private void actualizarMapaConDestino() {
         if (destinoGeoPoint == null) return;
 
         if (markerDestino == null) {
             markerDestino = new Marker(binding.map);
             markerDestino.setTitle("Destino Entrega");
-            markerDestino.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.ic_location));
+            markerDestino.setIcon(scaleDrawable(R.drawable.ic_location, 80, 80));
             markerDestino.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
             binding.map.getOverlays().add(markerDestino);
         }
         markerDestino.setPosition(destinoGeoPoint);
 
-        centrarMapa();
+        // Al entrar, centrar en el destino del cliente
+        binding.map.getController().animateTo(destinoGeoPoint);
     }
 
     private void centrarMapa() {
-        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (destinoGeoPoint != null) {
+            binding.map.getController().animateTo(destinoGeoPoint);
+        } else {
+            Snackbar.make(binding.getRoot(), "Dirección de destino no disponible", Snackbar.LENGTH_SHORT).show();
+        }
+    }
+
+    private void generarRuta() {
+        if (destinoGeoPoint == null) {
+            Snackbar.make(binding.getRoot(), "Dirección de destino no cargada", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             fusedLocationClient.getLastLocation().addOnSuccessListener(requireActivity(), location -> {
                 if (location != null) {
                     GeoPoint current = new GeoPoint(location.getLatitude(), location.getLongitude());
+                    
+                    // Centrar en la ubicación del delivery al generar ruta
                     if (markerRepartidor == null) {
                         markerRepartidor = new Marker(binding.map);
                         markerRepartidor.setTitle("Mi Ubicación (Moto)");
-                        markerRepartidor.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.repartidor)); // TAREA 3
+                        markerRepartidor.setIcon(scaleDrawable(R.drawable.repartidor, 100, 100));
                         markerRepartidor.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
                         binding.map.getOverlays().add(markerRepartidor);
                     }
                     markerRepartidor.setPosition(current);
                     binding.map.getController().animateTo(current);
+                    
                     trazarRuta(current, destinoGeoPoint);
-                } else if (destinoGeoPoint != null) {
-                    binding.map.getController().animateTo(destinoGeoPoint);
+                    Snackbar.make(binding.getRoot(), "Calculando ruta...", Snackbar.LENGTH_SHORT).show();
+                } else {
+                    Snackbar.make(binding.getRoot(), "No se pudo obtener tu ubicación actual. Asegúrate de tener el GPS activado.", Snackbar.LENGTH_LONG).show();
                 }
             });
-        } else if (destinoGeoPoint != null) {
-            binding.map.getController().animateTo(destinoGeoPoint);
+        } else {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                generarRuta();
+            } else {
+                Snackbar.make(binding.getRoot(), "Permiso de ubicación denegado. No se puede trazar la ruta.", Snackbar.LENGTH_LONG).show();
+            }
         }
     }
 
     private void animarMarcadorRepartidor(GeoPoint target) {
         if (markerRepartidor == null) {
             markerRepartidor = new Marker(binding.map);
-            markerRepartidor.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.repartidor));
+            markerRepartidor.setIcon(scaleDrawable(R.drawable.repartidor, 100, 100));
             markerRepartidor.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
             binding.map.getOverlays().add(markerRepartidor);
         }
@@ -272,7 +327,10 @@ public class DetallePedidoFragment extends Fragment {
                 if (t < 1f) {
                     handler.postDelayed(this, 16);
                 } else {
-                    trazarRuta(target, destinoGeoPoint);
+                    // Solo actualizar la ruta si ya se ha trazado una previamente
+                    if (routePolyline != null) {
+                        trazarRuta(target, destinoGeoPoint);
+                    }
                 }
             }
         });

@@ -20,6 +20,9 @@ public class PedidoRepartidorDTO {
 
     public Double total;
 
+    @SerializedName("cliente")
+    public PerfilClienteDTO perfil;
+
     @SerializedName("creado_at")
     public String creadoAt;
 
@@ -31,7 +34,8 @@ public class PedidoRepartidorDTO {
                 repartidorId,
                 estado,
                 total,
-                creadoAt
+                creadoAt,
+                perfil != null ? perfil.nombreCompleto : null
         );
     }
 }

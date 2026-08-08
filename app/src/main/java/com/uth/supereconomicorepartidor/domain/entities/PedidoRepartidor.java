@@ -10,9 +10,10 @@ public class PedidoRepartidor implements Serializable {
     private final String estado;
     private final Double total;
     private final String creadoAt;
+    private final String nombreCliente;
 
     public PedidoRepartidor(Long id, String perfilId, Long direccionId, String repartidorId,
-                             String estado, Double total, String creadoAt) {
+                             String estado, Double total, String creadoAt, String nombreCliente) {
         this.id = id;
         this.perfilId = perfilId;
         this.direccionId = direccionId;
@@ -20,6 +21,7 @@ public class PedidoRepartidor implements Serializable {
         this.estado = estado;
         this.total = total;
         this.creadoAt = creadoAt;
+        this.nombreCliente = nombreCliente;
     }
 
     public Long getId() { return id; }
@@ -29,4 +31,5 @@ public class PedidoRepartidor implements Serializable {
     public String getEstado() { return estado; }
     public Double getTotal() { return total; }
     public String getCreadoAt() { return creadoAt; }
+    public String getNombreCliente() { return nombreCliente; }
 }

@@ -239,6 +239,18 @@
                 </com.google.android.material.card.MaterialCardView>
 
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabRuta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="16dp"
+                    android:contentDescription="Trazar Ruta"
+                    android:src="@drawable/ic_arrow_navigation"
+                    app:backgroundTint="@color/white"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/fabCentrar"
+                    app:tint="@color/green_primary" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/fabCentrar"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

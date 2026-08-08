@@ -61,25 +61,42 @@ public class DetallePedidoViewModel extends ViewModel {
     }
 
     private void cargarDireccion(Long direccionId) {
+        if (direccionId == null) {
+            DireccionDTO errorDir = new DireccionDTO();
+            errorDir.direccionTexto = "Dirección no disponible";
+            _direccion.postValue(errorDir);
+            return;
+        }
         repository.getDireccion(direccionId, new RepartidorRepository.Callback<DireccionDTO>() {
             @Override
             public void onSuccess(DireccionDTO result) {
                 _direccion.postValue(result);
             }
-            @Override public void onError(String message) {}
+            @Override public void onError(String message) {
+                _error.postValue("Error al cargar dirección: " + message);
+                DireccionDTO errorDir = new DireccionDTO();
+                errorDir.direccionTexto = "No se pudo cargar la dirección";
+                _direccion.postValue(errorDir);
+                _isLoading.postValue(false);
+            }
         });
     }
 
     private void cargarPerfilCliente(String clienteId) {
+        if (clienteId == null || clienteId.isEmpty()) {
+            _isLoading.postValue(false);
+            return;
+        }
         repository.getPerfil(clienteId, new RepartidorRepository.Callback<Usuario>() {
             @Override
             public void onSuccess(Usuario result) {
-                _isLoading.postValue(false);
                 _cliente.postValue(result);
+                _isLoading.postValue(false);
             }
 
             @Override
             public void onError(String message) {
+                _error.postValue("Error al cargar cliente: " + message);
                 _isLoading.postValue(false);
             }
         });

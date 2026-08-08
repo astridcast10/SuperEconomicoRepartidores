@@ -24,7 +24,7 @@ public class RepartidorRepositoryImpl implements RepartidorRepository {
     public void getPedidosAsignados(String repartidorId, Callback<List<PedidoRepartidor>> callback) {
         repartidorApi.getPedidosAsignados(
                 "eq." + repartidorId,
-                "*",
+                "*,cliente:perfiles!perfil_id(nombre_completo)",
                 "creado_at.desc"
         ).enqueue(new retrofit2.Callback<List<PedidoRepartidorDTO>>() {
             @Override
