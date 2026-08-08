@@ -105,7 +105,7 @@
             android:background="@color/white"
             app:tabIndicatorColor="@color/green_primary"
             app:tabSelectedTextColor="@color/green_primary"
-            app:tabTextColor="@color/grey_light">
+            app:tabTextColor="@color/grey_dark">
 
             <com.google.android.material.tabs.TabItem
                 android:layout_width="wrap_content"

@@ -39,7 +39,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Hoy, 14:30"
-                android:textColor="@color/grey_light"
+                android:textColor="@color/grey_dark"
                 android:textSize="12sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -60,46 +60,46 @@
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:src="@drawable/ic_box"
-                app:tint="@color/grey_light" />
+                app:tint="@color/grey_dark" />
 
             <View
                 android:layout_width="24dp"
                 android:layout_height="2dp"
                 android:layout_marginHorizontal="4dp"
-                android:background="@color/grey_light" />
+                android:background="@color/grey_dark" />
 
             <ImageView
                 android:id="@+id/step2"
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:src="@drawable/ic_repartidor"
-                app:tint="@color/grey_light" />
+                app:tint="@color/grey_dark" />
 
             <View
                 android:layout_width="24dp"
                 android:layout_height="2dp"
                 android:layout_marginHorizontal="4dp"
-                android:background="@color/grey_light" />
+                android:background="@color/grey_dark" />
 
             <ImageView
                 android:id="@+id/step3"
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:src="@drawable/ic_location"
-                app:tint="@color/grey_light" />
+                app:tint="@color/grey_dark" />
 
             <View
                 android:layout_width="24dp"
                 android:layout_height="2dp"
                 android:layout_marginHorizontal="4dp"
-                android:background="@color/grey_light" />
+                android:background="@color/grey_dark" />
 
             <ImageView
                 android:id="@+id/step4"
                 android:layout_width="16dp"
                 android:layout_height="16dp"
                 android:src="@drawable/ic_person"
-                app:tint="@color/grey_light" />
+                app:tint="@color/grey_dark" />
         </LinearLayout>
 
         <TextView
@@ -111,7 +111,7 @@
             android:drawablePadding="8dp"
             android:text="Calle Principal #123"
             android:textColor="@color/black"
-            app:drawableTint="@color/grey_light" />
+            app:drawableTint="@color/grey_dark" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"

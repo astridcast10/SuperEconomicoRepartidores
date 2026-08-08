@@ -63,7 +63,7 @@ public class PedidosAdapter extends ListAdapter<PedidoRepartidor, PedidosAdapter
 
         private void updateSteps(String estado) {
             int activeColor = ContextCompat.getColor(itemView.getContext(), R.color.green_primary);
-            int inactiveColor = ContextCompat.getColor(itemView.getContext(), R.color.grey_light);
+            int inactiveColor = ContextCompat.getColor(itemView.getContext(), R.color.grey_dark);
 
             resetStep(binding.step1, inactiveColor);
             resetStep(binding.step2, inactiveColor);
