@@ -20,7 +20,7 @@ public class RetrofitClient {
             Interceptor authInterceptor = chain -> {
                 Request original = chain.request();
                 
-                // Determinar qué token usar
+                // Determinar qué token usar (lógica espejo del apiFetch en JS)
                 String token = SupabaseConfig.ANON_KEY;
                 if (SesionSupabase.haySesionActiva()) {
                     String userToken = SesionSupabase.obtenerTokenValido();

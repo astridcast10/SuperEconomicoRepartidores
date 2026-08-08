@@ -20,7 +20,7 @@ public interface RepartidorApi {
     );
 
     @PATCH("rest/v1/pedidos")
-    Call<Void> actualizarEstadoPedido(
+    Call<Void> patchPedido(
             @Header("Prefer") String prefer, // "return=minimal"
             @Query("id") String filtroId, // llega como "eq.<id>"
             @Body JsonObject cambios
@@ -48,12 +48,5 @@ public interface RepartidorApi {
     Call<List<com.uth.supereconomicorepartidor.data.remote.models.ItemPedidoDTO>> getItemsPedido(
             @Query("pedido_id") String pedidoId, // "eq.<id>"
             @Query("select") String select
-    );
-
-    @PATCH("rest/v1/pedidos")
-    Call<Void> actualizarEstadoRepartidor(
-            @Header("Prefer") String prefer, // "return=minimal"
-            @Query("id") String filtroId, // "eq.<id>"
-            @Body JsonObject cambios
     );
 }

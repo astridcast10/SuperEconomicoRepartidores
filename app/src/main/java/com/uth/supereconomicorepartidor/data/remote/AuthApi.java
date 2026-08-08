@@ -55,7 +55,7 @@ public interface AuthApi {
         String origin;
         public EdgeLoginRequest(String email, String password) {
             super(email, password);
-            this.origin = "app_repartidor";
+            this.origin = "cpanel";
         }
     }
 
