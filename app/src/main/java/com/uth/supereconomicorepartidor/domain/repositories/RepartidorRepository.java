@@ -20,5 +20,7 @@ public interface RepartidorRepository {
 
     void getDireccion(Long direccionId, Callback<com.uth.supereconomicorepartidor.data.remote.models.DireccionDTO> callback);
 
+    void getPerfil(String usuarioId, Callback<com.uth.supereconomicorepartidor.domain.entities.Usuario> callback);
+
     void verificarRolRepartidor(String usuarioId, Callback<Boolean> callback);
 }

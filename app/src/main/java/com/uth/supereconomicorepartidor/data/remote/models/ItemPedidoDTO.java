@@ -7,13 +7,20 @@ public class ItemPedidoDTO {
     public Long id;
     @SerializedName("pedido_id")
     public Long pedidoId;
-    @SerializedName("producto_nombre")
-    public String productoNombre;
+    
+    // Cambiado para soportar el join: productos(nombre)
+    public ProductoInnerDTO productos;
+    
     public int cantidad;
     @SerializedName("precio_unitario")
     public double precioUnitario;
 
+    public static class ProductoInnerDTO {
+        public String nombre;
+    }
+
     public ItemPedido toDomain() {
-        return new ItemPedido(id, pedidoId, productoNombre, cantidad, precioUnitario);
+        String nombre = (productos != null) ? productos.nombre : "Producto Desconocido";
+        return new ItemPedido(id, pedidoId, nombre, cantidad, precioUnitario);
     }
 }

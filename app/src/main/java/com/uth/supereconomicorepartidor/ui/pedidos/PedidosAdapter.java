@@ -2,6 +2,7 @@ package com.uth.supereconomicorepartidor.ui.pedidos;
 
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -50,19 +51,48 @@ public class PedidosAdapter extends ListAdapter<PedidoRepartidor, PedidosAdapter
 
         public void bind(PedidoRepartidor pedido, OnPedidoClickListener listener) {
             binding.tvPedidoId.setText(String.format(Locale.getDefault(), "#%d", pedido.getId()));
-            binding.tvDireccion.setText("Cargando dirección..."); // Luego implementaremos el join con direcciones
+            binding.tvDireccion.setText("Consultar dirección en detalle"); 
             binding.tvTotal.setText(String.format(Locale.getDefault(), "$%.2f", pedido.getTotal()));
+            binding.tvFecha.setText(pedido.getCreadoAt() != null ? pedido.getCreadoAt().split("T")[0] : "");
             
-            String estado = pedido.getEstado();
-            binding.chipEstado.setText(estado.substring(0, 1).toUpperCase() + estado.substring(1));
+            updateSteps(pedido.getEstado());
             
-            int colorRes = R.color.status_pendiente;
-            if ("en_camino".equalsIgnoreCase(estado)) colorRes = R.color.status_en_camino;
-            else if ("entregado".equalsIgnoreCase(estado)) colorRes = R.color.status_entregado;
-            
-            binding.chipEstado.setChipBackgroundColorResource(colorRes);
-            
+            binding.btnVerDetalle.setOnClickListener(v -> listener.onPedidoClick(pedido));
             itemView.setOnClickListener(v -> listener.onPedidoClick(pedido));
+        }
+
+        private void updateSteps(String estado) {
+            int activeColor = ContextCompat.getColor(itemView.getContext(), R.color.green_primary);
+            int inactiveColor = ContextCompat.getColor(itemView.getContext(), R.color.grey_light);
+
+            resetStep(binding.step1, inactiveColor);
+            resetStep(binding.step2, inactiveColor);
+            resetStep(binding.step3, inactiveColor);
+            resetStep(binding.step4, inactiveColor);
+
+            if ("pendiente".equalsIgnoreCase(estado)) {
+                highlightStep(binding.step1, activeColor);
+            } else if ("preparando".equalsIgnoreCase(estado)) {
+                highlightStep(binding.step1, activeColor);
+                highlightStep(binding.step2, activeColor);
+            } else if ("en_camino".equalsIgnoreCase(estado)) {
+                highlightStep(binding.step1, activeColor);
+                highlightStep(binding.step2, activeColor);
+                highlightStep(binding.step3, activeColor);
+            } else if ("entregado".equalsIgnoreCase(estado)) {
+                highlightStep(binding.step1, activeColor);
+                highlightStep(binding.step2, activeColor);
+                highlightStep(binding.step3, activeColor);
+                highlightStep(binding.step4, activeColor);
+            }
+        }
+
+        private void resetStep(ImageView img, int color) {
+            img.setColorFilter(color);
+        }
+
+        private void highlightStep(ImageView img, int color) {
+            img.setColorFilter(color);
         }
     }
 

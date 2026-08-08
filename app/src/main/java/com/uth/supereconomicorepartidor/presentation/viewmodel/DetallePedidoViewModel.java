@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import com.uth.supereconomicorepartidor.data.remote.models.DireccionDTO;
 import com.uth.supereconomicorepartidor.domain.entities.ItemPedido;
+import com.uth.supereconomicorepartidor.domain.entities.Usuario;
 import com.uth.supereconomicorepartidor.domain.repositories.RepartidorRepository;
 import com.uth.supereconomicorepartidor.domain.usecases.ActualizarEstadoPedidoUseCase;
 import com.uth.supereconomicorepartidor.domain.usecases.GetItemsPedidoUseCase;
@@ -21,6 +22,9 @@ public class DetallePedidoViewModel extends ViewModel {
     private final MutableLiveData<DireccionDTO> _direccion = new MutableLiveData<>();
     public LiveData<DireccionDTO> direccion = _direccion;
 
+    private final MutableLiveData<Usuario> _cliente = new MutableLiveData<>();
+    public LiveData<Usuario> cliente = _cliente;
+
     private final MutableLiveData<Boolean> _isLoading = new MutableLiveData<>();
     public LiveData<Boolean> isLoading = _isLoading;
 
@@ -36,7 +40,7 @@ public class DetallePedidoViewModel extends ViewModel {
         this.actualizarEstadoPedidoUseCase = actualizarEstadoPedidoUseCase;
     }
 
-    public void cargarDetalles(Long pedidoId, Long direccionId) {
+    public void cargarDetalles(Long pedidoId, Long direccionId, String clienteId) {
         _isLoading.setValue(true);
         
         // Cargar items
@@ -44,8 +48,8 @@ public class DetallePedidoViewModel extends ViewModel {
             @Override
             public void onSuccess(List<ItemPedido> result) {
                 _items.postValue(result);
-                // Si ya tenemos items, intentamos cargar dirección
                 cargarDireccion(direccionId);
+                cargarPerfilCliente(clienteId);
             }
 
             @Override
@@ -60,14 +64,23 @@ public class DetallePedidoViewModel extends ViewModel {
         repository.getDireccion(direccionId, new RepartidorRepository.Callback<DireccionDTO>() {
             @Override
             public void onSuccess(DireccionDTO result) {
-                _isLoading.postValue(false);
                 _direccion.postValue(result);
+            }
+            @Override public void onError(String message) {}
+        });
+    }
+
+    private void cargarPerfilCliente(String clienteId) {
+        repository.getPerfil(clienteId, new RepartidorRepository.Callback<Usuario>() {
+            @Override
+            public void onSuccess(Usuario result) {
+                _isLoading.postValue(false);
+                _cliente.postValue(result);
             }
 
             @Override
             public void onError(String message) {
                 _isLoading.postValue(false);
-                _error.postValue(message);
             }
         });
     }

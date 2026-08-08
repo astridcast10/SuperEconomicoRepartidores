@@ -96,7 +96,7 @@ public class RepartidorRepositoryImpl implements RepartidorRepository {
 
     @Override
     public void getItemsPedido(Long pedidoId, Callback<List<com.uth.supereconomicorepartidor.domain.entities.ItemPedido>> callback) {
-        repartidorApi.getItemsPedido("eq." + pedidoId, "*").enqueue(new retrofit2.Callback<List<com.uth.supereconomicorepartidor.data.remote.models.ItemPedidoDTO>>() {
+        repartidorApi.getItemsPedido("eq." + pedidoId, "*,productos(nombre)").enqueue(new retrofit2.Callback<List<com.uth.supereconomicorepartidor.data.remote.models.ItemPedidoDTO>>() {
             @Override
             public void onResponse(Call<List<com.uth.supereconomicorepartidor.data.remote.models.ItemPedidoDTO>> call, Response<List<com.uth.supereconomicorepartidor.data.remote.models.ItemPedidoDTO>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -146,6 +146,25 @@ public class RepartidorRepositoryImpl implements RepartidorRepository {
                     callback.onSuccess(esRepartidor);
                 } else {
                     callback.onError(UserFriendlyError.fromResponse(response, "No se pudo verificar el perfil del usuario"));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<PerfilClienteDTO>> call, Throwable t) {
+                callback.onError(UserFriendlyError.fromThrowable(t));
+            }
+        });
+    }
+
+    @Override
+    public void getPerfil(String usuarioId, Callback<com.uth.supereconomicorepartidor.domain.entities.Usuario> callback) {
+        repartidorApi.getRolUsuario("eq." + usuarioId, "*").enqueue(new retrofit2.Callback<List<PerfilClienteDTO>>() {
+            @Override
+            public void onResponse(Call<List<PerfilClienteDTO>> call, Response<List<PerfilClienteDTO>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    callback.onSuccess(response.body().get(0).toDomain());
+                } else {
+                    callback.onError(UserFriendlyError.fromResponse(response, "No se pudo cargar el perfil"));
                 }
             }
 

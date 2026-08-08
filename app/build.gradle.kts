@@ -50,8 +50,8 @@ dependencies {
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.lifecycle.livedata)
     
-    // Google Maps
-    implementation(libs.google.maps)
+    // Maps
+    implementation(libs.osmdroid)
     implementation(libs.google.location)
 
     testImplementation(libs.junit)

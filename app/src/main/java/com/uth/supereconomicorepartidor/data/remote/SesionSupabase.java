@@ -19,12 +19,14 @@ public class SesionSupabase {
     private static final String CLAVE_TOKEN_REFRESCO = "token_refresco";
     private static final String CLAVE_EXPIRA_EN = "expira_en";
     private static final String CLAVE_ID_USUARIO = "id_usuario";
+    private static final String CLAVE_NOMBRE_USUARIO = "nombre_usuario";
 
     private static SharedPreferences preferencias;
     private static String tokenAcceso;
     private static String tokenRefresco;
     private static long expiraEn;
     private static String idUsuario;
+    private static String nombreUsuario;
 
     private SesionSupabase() {
     }
@@ -37,6 +39,7 @@ public class SesionSupabase {
             tokenRefresco = preferencias.getString(CLAVE_TOKEN_REFRESCO, null);
             expiraEn = preferencias.getLong(CLAVE_EXPIRA_EN, 0L);
             idUsuario = preferencias.getString(CLAVE_ID_USUARIO, null);
+            nombreUsuario = preferencias.getString(CLAVE_NOMBRE_USUARIO, null);
         }
     }
 
@@ -66,6 +69,17 @@ public class SesionSupabase {
         if (preferencias != null) {
             preferencias.edit().putString(CLAVE_ID_USUARIO, id).apply();
         }
+    }
+
+    public static void guardarNombre(String nombre) {
+        nombreUsuario = nombre;
+        if (preferencias != null) {
+            preferencias.edit().putString(CLAVE_NOMBRE_USUARIO, nombre).apply();
+        }
+    }
+
+    public static String obtenerNombre() {
+        return nombreUsuario;
     }
 
     public static String obtenerTokenAcceso() {
@@ -143,6 +157,7 @@ public class SesionSupabase {
         tokenRefresco = null;
         expiraEn = 0L;
         idUsuario = null;
+        nombreUsuario = null;
         if (preferencias != null) {
             preferencias.edit().clear().apply();
         }

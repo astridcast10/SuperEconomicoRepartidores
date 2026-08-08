@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
-    tools:context=".ui.detalle.DetallePedidoFragment">
+    android:background="@color/white">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -31,11 +30,91 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+            <!-- Card de Info Principal -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp">
+                app:cardBackgroundColor="@color/green_primary"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="6dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:id="@+id/tvIdPedido"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="#0001"
+                        android:textColor="@color/white"
+                        android:textSize="28sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="Cliente"
+                            android:src="@drawable/ic_person"
+                            app:tint="@color/white" />
+
+                        <TextView
+                            android:id="@+id/tvClienteNombre"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:text="Nombre del Cliente"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="Ubicación"
+                            android:src="@drawable/ic_location"
+                            app:tint="@color/white" />
+
+                        <TextView
+                            android:id="@+id/tvDireccion"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:text="Cargando dirección..."
+                            android:textColor="@color/white"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Card de Estado de Entrega (Rediseñada a blanco) -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="@color/white"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:strokeColor="@color/green_primary"
+                app:strokeWidth="1dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -44,91 +123,132 @@
                     android:padding="16dp">
 
                     <TextView
-                        android:id="@+id/tvIdPedido"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="#0001"
+                        android:text="Estado de Entrega"
                         android:textColor="@color/green_primary"
-                        android:textSize="20sp"
                         android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvDireccion"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="Cargando dirección..."
-                        android:textColor="@color/green_primary" />
 
                     <com.google.android.material.textfield.TextInputLayout
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:hint="Estado del Pedido"
-                        app:hintTextColor="@color/green_primary">
+                        android:layout_marginTop="8dp"
+                        app:boxStrokeColor="@color/green_primary"
+                        app:hintEnabled="false"
+                        app:startIconDrawable="@drawable/ic_shipping"
+                        app:startIconTint="@color/green_primary">
 
                         <AutoCompleteTextView
                             android:id="@+id/autoCompleteEstado"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:backgroundTint="@color/white"
                             android:inputType="none"
+                            android:paddingVertical="12dp"
                             android:textColor="@color/green_primary" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Lista de Productos -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="Productos"
+                android:layout_marginTop="32dp"
+                android:text="Resumen del Pedido"
                 android:textColor="@color/green_primary"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 android:textStyle="bold" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvProductos"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
                 android:nestedScrollingEnabled="false"
                 tools:listitem="@layout/item_producto_detalle" />
 
-            <TextView
-                android:id="@+id/tvTotal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:gravity="end"
-                android:text="Total: $0.00"
-                android:textColor="@color/green_primary"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="Ubicación"
-                android:textColor="@color/green_primary"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
-                android:layout_height="250dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="32dp"
-                app:cardCornerRadius="12dp">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                app:cardBackgroundColor="@color/grey_light"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp">
 
-                <fragment
-                    android:id="@+id/map"
-                    android:name="com.google.android.gms.maps.SupportMapFragment"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:padding="20dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginEnd="12dp"
+                        android:contentDescription="Total"
+                        android:src="@drawable/ic_money"
+                        app:tint="@color/green_primary" />
+
+                    <TextView
+                        android:id="@+id/tvTotal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Total a Cobrar: $0.00"
+                        android:textColor="@color/green_primary"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- Mapa -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp">
+
+                <TextView
+                    android:id="@+id/tvMapTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ruta de Entrega"
+                    android:textColor="@color/green_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="350dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="32dp"
+                    app:cardCornerRadius="20dp"
+                    app:layout_constraintTop_toBottomOf="@id/tvMapTitle"
+                    app:strokeColor="@color/grey_light"
+                    app:strokeWidth="1dp">
+
+                    <org.osmdroid.views.MapView
+                        android:id="@+id/map"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabCentrar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="16dp"
+                    android:contentDescription="Centrar"
+                    android:src="@drawable/ic_location"
+                    app:backgroundTint="@color/white"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:tint="@color/green_primary" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

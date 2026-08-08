@@ -3,31 +3,36 @@ package com.uth.supereconomicorepartidor.ui.pedidos;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.tabs.TabLayout;
 import com.uth.supereconomicorepartidor.R;
 import com.uth.supereconomicorepartidor.data.remote.SesionSupabase;
 import com.uth.supereconomicorepartidor.databinding.FragmentPedidosBinding;
+import com.uth.supereconomicorepartidor.domain.entities.PedidoRepartidor;
 import com.uth.supereconomicorepartidor.presentation.viewmodel.PedidosViewModel;
 import com.uth.supereconomicorepartidor.presentation.viewmodel.ViewModelFactory;
 import com.uth.supereconomicorepartidor.ui.detalle.DetallePedidoFragment;
 import com.uth.supereconomicorepartidor.ui.login.LoginActivity;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class PedidosFragment extends Fragment {
 
     private FragmentPedidosBinding binding;
     private PedidosViewModel viewModel;
     private PedidosAdapter adapter;
+    private List<PedidoRepartidor> allPedidos = new ArrayList<>();
 
     @Nullable
     @Override
@@ -42,7 +47,7 @@ public class PedidosFragment extends Fragment {
 
         viewModel = new ViewModelProvider(this, new ViewModelFactory()).get(PedidosViewModel.class);
         
-        setupToolbar();
+        setupUI();
         setupRecyclerView();
         setupObservers();
         setupListeners();
@@ -50,17 +55,13 @@ public class PedidosFragment extends Fragment {
         cargarDatos();
     }
 
-    private void setupToolbar() {
-        binding.toolbar.inflateMenu(R.menu.menu_pedidos);
-        binding.toolbar.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == R.id.action_logout) {
-                SesionSupabase.cerrarSesion();
-                startActivity(new Intent(getContext(), LoginActivity.class));
-                if (getActivity() != null) getActivity().finish();
-                return true;
-            }
-            return false;
-        });
+    private void setupUI() {
+        String nombre = SesionSupabase.obtenerNombre();
+        if (nombre != null && !nombre.isEmpty()) {
+            binding.tvTitle.setText("Hola, " + nombre.split(" ")[0]);
+        } else {
+            binding.tvTitle.setText("Mis Pedidos");
+        }
     }
 
     private void setupRecyclerView() {
@@ -68,6 +69,7 @@ public class PedidosFragment extends Fragment {
             DetallePedidoFragment fragment = DetallePedidoFragment.newInstance(pedido);
             if (getActivity() != null) {
                 getActivity().getSupportFragmentManager().beginTransaction()
+                        .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out, android.R.anim.fade_in, android.R.anim.fade_out)
                         .replace(R.id.fragmentContainer, fragment)
                         .addToBackStack(null)
                         .commit();
@@ -79,7 +81,8 @@ public class PedidosFragment extends Fragment {
 
     private void setupObservers() {
         viewModel.pedidos.observe(getViewLifecycleOwner(), pedidos -> {
-            adapter.submitList(pedidos);
+            this.allPedidos = pedidos != null ? pedidos : new ArrayList<>();
+            filtrarPedidos(binding.tabLayout.getSelectedTabPosition());
         });
 
         viewModel.isLoading.observe(getViewLifecycleOwner(), isLoading -> {
@@ -95,6 +98,43 @@ public class PedidosFragment extends Fragment {
 
     private void setupListeners() {
         binding.swipeRefresh.setOnRefreshListener(this::cargarDatos);
+
+        binding.tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override public void onTabSelected(TabLayout.Tab tab) { filtrarPedidos(tab.getPosition()); }
+            @Override public void onTabUnselected(TabLayout.Tab tab) {}
+            @Override public void onTabReselected(TabLayout.Tab tab) {}
+        });
+
+        binding.btnLogout.setOnClickListener(v -> mostrarDialogoLogout());
+    }
+
+    private void mostrarDialogoLogout() {
+        new MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_AlertDialog)
+                .setTitle("Cerrar sesión")
+                .setMessage("¿Estás seguro de que deseas salir?")
+                .setPositiveButton("Sí, salir", (dialog, which) -> {
+                    SesionSupabase.cerrarSesion();
+                    startActivity(new Intent(getContext(), LoginActivity.class));
+                    if (getActivity() != null) getActivity().finish();
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void filtrarPedidos(int tabPosition) {
+        List<PedidoRepartidor> filtrados = new ArrayList<>();
+        for (PedidoRepartidor p : allPedidos) {
+            boolean enCurso = "pendiente".equalsIgnoreCase(p.getEstado()) || 
+                             "preparando".equalsIgnoreCase(p.getEstado()) || 
+                             "en_camino".equalsIgnoreCase(p.getEstado());
+            
+            if (tabPosition == 0 && enCurso) {
+                filtrados.add(p);
+            } else if (tabPosition == 1 && !enCurso) {
+                filtrados.add(p);
+            }
+        }
+        adapter.submitList(filtrados);
     }
 
     private void cargarDatos() {

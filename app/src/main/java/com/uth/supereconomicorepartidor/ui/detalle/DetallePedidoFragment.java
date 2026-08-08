@@ -4,6 +4,9 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,31 +15,33 @@ import android.widget.ArrayAdapter;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.material.snackbar.Snackbar;
 import com.uth.supereconomicorepartidor.R;
-import com.uth.supereconomicorepartidor.data.remote.GoogleMapsApi;
-import com.uth.supereconomicorepartidor.data.remote.MapsConfig;
+import com.uth.supereconomicorepartidor.data.remote.OsrmApi;
 import com.uth.supereconomicorepartidor.data.remote.SesionSupabase;
-import com.uth.supereconomicorepartidor.data.remote.models.DireccionDTO;
 import com.uth.supereconomicorepartidor.databinding.FragmentDetallePedidoBinding;
 import com.uth.supereconomicorepartidor.domain.entities.PedidoRepartidor;
 import com.uth.supereconomicorepartidor.presentation.viewmodel.DetallePedidoViewModel;
 import com.uth.supereconomicorepartidor.presentation.viewmodel.ViewModelFactory;
-import com.uth.supereconomicorepartidor.utils.PolylineDecoder;
 
+import org.osmdroid.config.Configuration;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.CustomZoomButtonsController;
+import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.Polyline;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -46,18 +51,22 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class DetallePedidoFragment extends Fragment implements OnMapReadyCallback {
+public class DetallePedidoFragment extends Fragment {
 
     private static final String ARG_PEDIDO = "pedido";
 
     private FragmentDetallePedidoBinding binding;
     private DetallePedidoViewModel viewModel;
     private ItemPedidoAdapter adapter;
-    private GoogleMap googleMap;
     private FusedLocationProviderClient fusedLocationClient;
+    private LocationCallback locationCallback;
 
     private PedidoRepartidor pedido;
-    private LatLng destinoLatLng;
+    private GeoPoint destinoGeoPoint;
+    private Marker markerRepartidor;
+    private Marker markerDestino;
+    private Polyline routePolyline;
+    private boolean isEnCamino = false;
 
     public static DetallePedidoFragment newInstance(PedidoRepartidor pedido) {
         DetallePedidoFragment fragment = new DetallePedidoFragment();
@@ -70,10 +79,23 @@ public class DetallePedidoFragment extends Fragment implements OnMapReadyCallbac
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Configuration.getInstance().load(requireContext(), PreferenceManager.getDefaultSharedPreferences(requireContext()));
+        Configuration.getInstance().setUserAgentValue(requireContext().getPackageName());
+
         if (getArguments() != null) {
             pedido = (PedidoRepartidor) getArguments().getSerializable(ARG_PEDIDO);
         }
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
+        
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                if (locationResult.getLastLocation() != null) {
+                    GeoPoint current = new GeoPoint(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude());
+                    animarMarcadorRepartidor(current);
+                }
+            }
+        };
     }
 
     @Nullable
@@ -92,21 +114,21 @@ public class DetallePedidoFragment extends Fragment implements OnMapReadyCallbac
         setupUI();
         setupRecyclerView();
         setupObservers();
-
-        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
-        if (mapFragment != null) mapFragment.getMapAsync(this);
+        setupMap();
 
         if (pedido != null) {
-            viewModel.cargarDetalles(pedido.getId(), pedido.getDireccionId());
+            viewModel.cargarDetalles(pedido.getId(), pedido.getDireccionId(), pedido.getPerfilId());
+            isEnCamino = "en_camino".equalsIgnoreCase(pedido.getEstado());
+            if (isEnCamino) startLocationUpdates();
         }
     }
 
     private void setupUI() {
         if (pedido == null) return;
         binding.tvIdPedido.setText(String.format(Locale.getDefault(), "#%d", pedido.getId()));
-        binding.tvTotal.setText(String.format(Locale.getDefault(), "Total: $%.2f", pedido.getTotal()));
+        binding.tvTotal.setText(String.format(Locale.getDefault(), "Total a Cobrar: $%.2f", pedido.getTotal()));
 
-        String[] estados = {"pendiente", "en_camino", "entregado"};
+        String[] estados = {"pendiente", "preparando", "en_camino", "entregado"};
         ArrayAdapter<String> adapterEstados = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, estados);
         binding.autoCompleteEstado.setAdapter(adapterEstados);
         binding.autoCompleteEstado.setText(pedido.getEstado(), false);
@@ -114,16 +136,39 @@ public class DetallePedidoFragment extends Fragment implements OnMapReadyCallbac
         binding.autoCompleteEstado.setOnItemClickListener((parent, view, position, id) -> {
             String nuevoEstado = estados[position];
             viewModel.actualizarEstado(pedido.getId(), nuevoEstado, SesionSupabase.obtenerIdUsuario());
+            
+            if ("en_camino".equalsIgnoreCase(nuevoEstado)) {
+                isEnCamino = true;
+                startLocationUpdates();
+            } else {
+                isEnCamino = false;
+                stopLocationUpdates();
+            }
         });
         
         binding.toolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material);
         binding.toolbar.setNavigationOnClickListener(v -> requireActivity().onBackPressed());
+        
+        binding.fabCentrar.setOnClickListener(v -> centrarMapa());
     }
 
     private void setupRecyclerView() {
         adapter = new ItemPedidoAdapter();
         binding.rvProductos.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.rvProductos.setAdapter(adapter);
+    }
+
+    private void setupMap() {
+        binding.map.setTileSource(TileSourceFactory.MAPNIK);
+        binding.map.setMultiTouchControls(true);
+        binding.map.getZoomController().setVisibility(CustomZoomButtonsController.Visibility.NEVER);
+        binding.map.getController().setZoom(17.0);
+
+        // BUG 3 - Evitar que el scroll del padre interfiera con el mapa
+        binding.map.setOnTouchListener((v, event) -> {
+            v.getParent().requestDisallowInterceptTouchEvent(true);
+            return false;
+        });
     }
 
     private void setupObservers() {
@@ -133,9 +178,15 @@ public class DetallePedidoFragment extends Fragment implements OnMapReadyCallbac
             if (dir != null) {
                 binding.tvDireccion.setText(dir.direccionTexto);
                 if (dir.latitud != null && dir.longitud != null) {
-                    destinoLatLng = new LatLng(dir.latitud, dir.longitud);
+                    destinoGeoPoint = new GeoPoint(dir.latitud, dir.longitud);
                     actualizarMapaConDestino();
                 }
+            }
+        });
+
+        viewModel.cliente.observe(getViewLifecycleOwner(), cliente -> {
+            if (cliente != null) {
+                binding.tvClienteNombre.setText(cliente.getNombreCompleto());
             }
         });
 
@@ -154,61 +205,139 @@ public class DetallePedidoFragment extends Fragment implements OnMapReadyCallbac
         });
     }
 
-    @Override
-    public void onMapReady(@NonNull GoogleMap googleMap) {
-        this.googleMap = googleMap;
-        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 100);
-            return;
+    private void actualizarMapaConDestino() {
+        if (destinoGeoPoint == null) return;
+
+        if (markerDestino == null) {
+            markerDestino = new Marker(binding.map);
+            markerDestino.setTitle("Destino Entrega");
+            markerDestino.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.ic_location));
+            markerDestino.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
+            binding.map.getOverlays().add(markerDestino);
         }
-        googleMap.setMyLocationEnabled(true);
-        actualizarMapaConDestino();
+        markerDestino.setPosition(destinoGeoPoint);
+
+        centrarMapa();
     }
 
-    private void actualizarMapaConDestino() {
-        if (googleMap == null || destinoLatLng == null) return;
-
+    private void centrarMapa() {
         if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             fusedLocationClient.getLastLocation().addOnSuccessListener(requireActivity(), location -> {
                 if (location != null) {
-                    LatLng current = new LatLng(location.getLatitude(), location.getLongitude());
-                    googleMap.clear();
-                    googleMap.addMarker(new MarkerOptions().position(current).title("Mi Ubicación"));
-                    googleMap.addMarker(new MarkerOptions().position(destinoLatLng).title("Destino"));
-                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(current, 14f));
-                    trazarRuta(current, destinoLatLng);
-                } else {
-                    googleMap.addMarker(new MarkerOptions().position(destinoLatLng).title("Destino"));
-                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(destinoLatLng, 15f));
+                    GeoPoint current = new GeoPoint(location.getLatitude(), location.getLongitude());
+                    if (markerRepartidor == null) {
+                        markerRepartidor = new Marker(binding.map);
+                        markerRepartidor.setTitle("Mi Ubicación (Moto)");
+                        markerRepartidor.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.ic_moto));
+                        markerRepartidor.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+                        binding.map.getOverlays().add(markerRepartidor);
+                    }
+                    markerRepartidor.setPosition(current);
+                    binding.map.getController().animateTo(current);
+                    trazarRuta(current, destinoGeoPoint);
+                } else if (destinoGeoPoint != null) {
+                    binding.map.getController().animateTo(destinoGeoPoint);
                 }
             });
-        } else {
-            googleMap.addMarker(new MarkerOptions().position(destinoLatLng).title("Destino"));
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(destinoLatLng, 15f));
+        } else if (destinoGeoPoint != null) {
+            binding.map.getController().animateTo(destinoGeoPoint);
         }
     }
 
-    private void trazarRuta(LatLng origin, LatLng dest) {
+    private void animarMarcadorRepartidor(GeoPoint target) {
+        if (markerRepartidor == null) {
+            markerRepartidor = new Marker(binding.map);
+            markerRepartidor.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.ic_moto));
+            markerRepartidor.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+            binding.map.getOverlays().add(markerRepartidor);
+        }
+        
+        GeoPoint start = markerRepartidor.getPosition();
+        final long duration = 1500;
+        final long startMillis = System.currentTimeMillis();
+        
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                long elapsed = System.currentTimeMillis() - startMillis;
+                float t = Math.min(1f, (float) elapsed / duration);
+                
+                double lat = start.getLatitude() + (target.getLatitude() - start.getLatitude()) * t;
+                double lon = start.getLongitude() + (target.getLongitude() - start.getLongitude()) * t;
+                
+                markerRepartidor.setPosition(new GeoPoint(lat, lon));
+                binding.map.invalidate();
+                
+                if (t < 1f) {
+                    handler.postDelayed(this, 16);
+                } else {
+                    trazarRuta(target, destinoGeoPoint);
+                }
+            }
+        });
+    }
+
+    private void startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) return;
+        
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        
+        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+    }
+
+    private void stopLocationUpdates() {
+        fusedLocationClient.removeLocationUpdates(locationCallback);
+    }
+
+    private void trazarRuta(GeoPoint origin, GeoPoint dest) {
+        if (origin == null || dest == null) return;
+        
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://maps.googleapis.com/")
+                .baseUrl("https://router.project-osrm.org/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        GoogleMapsApi api = retrofit.create(GoogleMapsApi.class);
-        String originStr = origin.latitude + "," + origin.longitude;
-        String destStr = dest.latitude + "," + dest.longitude;
+        OsrmApi api = retrofit.create(OsrmApi.class);
+        String coords = origin.getLongitude() + "," + origin.getLatitude() + ";" + dest.getLongitude() + "," + dest.getLatitude();
 
-        api.getDirections(originStr, destStr, MapsConfig.GOOGLE_MAPS_KEY).enqueue(new Callback<GoogleMapsApi.DirectionsResponse>() {
+        api.getRoute(coords, "full", "geojson").enqueue(new Callback<OsrmApi.OsrmResponse>() {
             @Override
-            public void onResponse(Call<GoogleMapsApi.DirectionsResponse> call, Response<GoogleMapsApi.DirectionsResponse> response) {
+            public void onResponse(Call<OsrmApi.OsrmResponse> call, Response<OsrmApi.OsrmResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().routes != null && !response.body().routes.isEmpty()) {
-                    String points = response.body().routes.get(0).overviewPolyline.points;
-                    List<LatLng> decodedPath = PolylineDecoder.decode(points);
-                    googleMap.addPolyline(new PolylineOptions().addAll(decodedPath).color(Color.GREEN).width(12));
+                    List<List<Double>> points = response.body().routes.get(0).geometry.coordinates;
+                    List<GeoPoint> geoPoints = new ArrayList<>();
+                    for (List<Double> point : points) {
+                        geoPoints.add(new GeoPoint(point.get(1), point.get(0)));
+                    }
+
+                    if (routePolyline != null) binding.map.getOverlays().remove(routePolyline);
+                    routePolyline = new Polyline();
+                    routePolyline.setPoints(geoPoints);
+                    routePolyline.getOutlinePaint().setColor(Color.parseColor("#2E7D32"));
+                    routePolyline.getOutlinePaint().setStrokeWidth(12);
+                    binding.map.getOverlays().add(routePolyline);
+                    binding.map.invalidate();
                 }
             }
-            @Override
-            public void onFailure(Call<GoogleMapsApi.DirectionsResponse> call, Throwable t) { }
+            @Override public void onFailure(Call<OsrmApi.OsrmResponse> call, Throwable t) { }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        binding.map.onResume();
+        if (isEnCamino) startLocationUpdates();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        binding.map.onPause();
+        stopLocationUpdates();
     }
 }

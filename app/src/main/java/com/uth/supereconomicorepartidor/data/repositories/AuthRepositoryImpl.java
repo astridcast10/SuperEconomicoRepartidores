@@ -118,6 +118,7 @@ public class AuthRepositoryImpl implements AuthRepository {
                     }
                     currentUser = dto.toDomain();
                     SesionSupabase.actualizarIdUsuario(dto.id);
+                    SesionSupabase.guardarNombre(dto.nombreCompleto);
                     if (callback != null) callback.onSuccess(currentUser);
                 } else {
                     SesionSupabase.cerrarSesion();

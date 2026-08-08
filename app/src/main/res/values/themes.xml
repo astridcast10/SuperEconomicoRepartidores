@@ -13,4 +13,15 @@
         <item name="android:textColor">@color/green_primary</item>
         <item name="android:textColorPrimary">@color/green_primary</item>
     </style>
+
+    <style name="Theme.App.Splash" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:statusBarColor">@color/green_dark</item>
+    </style>
+
+    <style name="ThemeOverlay.App.AlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="colorSurface">@color/white</item>
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:textColorPrimary">@color/black</item>
+    </style>
 </resources>
