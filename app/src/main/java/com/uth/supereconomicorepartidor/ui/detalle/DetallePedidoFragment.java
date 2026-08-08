@@ -228,7 +228,7 @@ public class DetallePedidoFragment extends Fragment {
                     if (markerRepartidor == null) {
                         markerRepartidor = new Marker(binding.map);
                         markerRepartidor.setTitle("Mi Ubicación (Moto)");
-                        markerRepartidor.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.ic_moto));
+                        markerRepartidor.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.repartidor)); // TAREA 3
                         markerRepartidor.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
                         binding.map.getOverlays().add(markerRepartidor);
                     }
@@ -247,7 +247,7 @@ public class DetallePedidoFragment extends Fragment {
     private void animarMarcadorRepartidor(GeoPoint target) {
         if (markerRepartidor == null) {
             markerRepartidor = new Marker(binding.map);
-            markerRepartidor.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.ic_moto));
+            markerRepartidor.setIcon(ContextCompat.getDrawable(requireContext(), R.drawable.repartidor));
             markerRepartidor.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
             binding.map.getOverlays().add(markerRepartidor);
         }

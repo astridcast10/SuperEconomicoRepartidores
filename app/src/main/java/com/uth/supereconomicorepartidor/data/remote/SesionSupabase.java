@@ -153,6 +153,7 @@ public class SesionSupabase {
     }
 
     public static void cerrarSesion() {
+        android.util.Log.d("SesionSupabase", "Borrando token y limpiando preferencias");
         tokenAcceso = null;
         tokenRefresco = null;
         expiraEn = 0L;

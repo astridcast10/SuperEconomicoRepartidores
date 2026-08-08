@@ -27,6 +27,41 @@
                 android:layout_height="match_parent"
                 android:padding="24dp">
 
+                <!-- Logo repartidor a la derecha -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cvRepartidorLogo"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:cardCornerRadius="28dp"
+                    app:cardElevation="4dp"
+                    app:strokeColor="@color/green_primary"
+                    app:strokeWidth="2dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/repartidor"
+                        android:contentDescription="Logo Repartidor" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Icono de perfil/persona a la izquierda del logo -->
+                <ImageButton
+                    android:id="@+id/btnProfile"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginEnd="12dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_person"
+                    app:tint="@color/white"
+                    app:layout_constraintBottom_toBottomOf="@id/cvRepartidorLogo"
+                    app:layout_constraintEnd_toStartOf="@id/cvRepartidorLogo"
+                    app:layout_constraintTop_toTopOf="@id/cvRepartidorLogo"
+                    android:contentDescription="Perfil" />
+
                 <TextView
                     android:id="@+id/tvTitle"
                     android:layout_width="wrap_content"
@@ -37,36 +72,6 @@
                     android:textStyle="bold"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent" />
-
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/cvUserIcon"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    app:cardBackgroundColor="@color/white"
-                    app:cardCornerRadius="24dp"
-                    app:cardElevation="4dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent">
-
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:padding="10dp"
-                        android:src="@drawable/ic_repartidor"
-                        app:tint="@color/green_primary" />
-                </com.google.android.material.card.MaterialCardView>
-
-                <ImageButton
-                    android:id="@+id/btnLogout"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="8dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_person"
-                    app:layout_constraintBottom_toBottomOf="@id/cvUserIcon"
-                    app:layout_constraintEnd_toStartOf="@id/cvUserIcon"
-                    app:layout_constraintTop_toTopOf="@id/cvUserIcon"
-                    app:tint="@color/white" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 

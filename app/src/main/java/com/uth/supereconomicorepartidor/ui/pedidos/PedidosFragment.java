@@ -105,19 +105,26 @@ public class PedidosFragment extends Fragment {
             @Override public void onTabReselected(TabLayout.Tab tab) {}
         });
 
-        binding.btnLogout.setOnClickListener(v -> mostrarDialogoLogout());
+        binding.btnProfile.setOnClickListener(v -> {
+            android.util.Log.d("Logout", "click detectado en btnProfile");
+            mostrarDialogoLogout();
+        });
     }
 
     private void mostrarDialogoLogout() {
-        new MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_App_AlertDialog)
+        android.util.Log.d("Logout", "mostrando dialogo de confirmacion");
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Cerrar sesión")
                 .setMessage("¿Estás seguro de que deseas salir?")
                 .setPositiveButton("Sí, salir", (dialog, which) -> {
+                    android.util.Log.d("Logout", "confirmacion aceptada, ejecutando cierre");
                     SesionSupabase.cerrarSesion();
-                    startActivity(new Intent(getContext(), LoginActivity.class));
+                    Intent intent = new Intent(getContext(), LoginActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
                     if (getActivity() != null) getActivity().finish();
                 })
-                .setNegativeButton("Cancelar", null)
+                .setNegativeButton("Cancelar", (dialog, which) -> android.util.Log.d("Logout", "confirmacion cancelada"))
                 .show();
     }
 

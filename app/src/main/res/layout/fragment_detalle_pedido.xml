@@ -146,7 +146,9 @@
                             android:backgroundTint="@color/white"
                             android:inputType="none"
                             android:paddingVertical="12dp"
-                            android:textColor="@color/green_primary" />
+                            android:textColor="@color/green_primary"
+                            android:dropDownSelector="@color/white"
+                            android:popupBackground="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                 </LinearLayout>
